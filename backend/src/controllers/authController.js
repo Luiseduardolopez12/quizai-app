@@ -13,7 +13,7 @@ const register = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "El email ya está registrado" });
+      return res.status(400).json({ message: "El email ya esta registrado" });
     }
 
     const user = await User.create({ name, email, password, role });
@@ -34,20 +34,32 @@ const login = async (req, res) => {
     if (!email || !password) {
       return res
         .status(400)
-        .json({ message: "Email y contraseña son requeridos" });
+        .json({ message: "Email y contrasena son requeridos" });
     }
 
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ message: "Credenciales incorrectas" });
+
+    console.log("Usuario encontrado:", user ? "SI" : "NO");
+    console.log("Email buscado:", email);
+
+    if (!user) {
+      return res.status(401).json({ message: "Usuario no existe" });
+    }
+
+    const passwordMatch = await user.comparePassword(password);
+    console.log("Password match:", passwordMatch);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Password incorrecto" });
     }
 
     const token = generateToken(user._id);
     res.json({ token, user });
   } catch (error) {
+    console.log("ERROR login:", error.message);
     res
       .status(500)
-      .json({ message: "Error al iniciar sesión", error: error.message });
+      .json({ message: "Error al iniciar sesion", error: error.message });
   }
 };
 

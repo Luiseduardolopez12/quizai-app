@@ -17,26 +17,16 @@ const userSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-userSchema.pre("save", function (next) {
-  const user = this;
-
-  if (!user.isModified("password")) {
-    return next();
-  }
-
-  bcrypt.genSalt(12, function (saltErr, salt) {
-    if (saltErr) return next(saltErr);
-
-    bcrypt.hash(user.password, salt, function (hashErr, hash) {
-      if (hashErr) return next(hashErr);
-      user.password = hash;
-      return next();
-    });
-  });
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-userSchema.methods.comparePassword = function (candidatePassword) {
-  return bcrypt.compare(candidatePassword, this.password);
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  const result = await bcrypt.compare(candidatePassword, this.password);
+  console.log("bcrypt compare result:", result);
+  return result;
 };
 
 userSchema.methods.toJSON = function () {
